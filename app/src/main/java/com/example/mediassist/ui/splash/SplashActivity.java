@@ -9,6 +9,7 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.mediassist.MainActivity;
 import com.example.mediassist.R;
+import com.example.mediassist.ui.auth.LoginActivity;
 import com.example.mediassist.ui.onboarding.OnboardingActivity;
 
 public class SplashActivity extends AppCompatActivity {
@@ -46,26 +47,27 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void checkFirstTimeUser() {
-        // Check if it's first time launch
         SharedPreferences prefs = getSharedPreferences("MediAssistPrefs", MODE_PRIVATE);
         boolean isFirstTimeLaunch = prefs.getBoolean("isFirstTimeLaunch", true);
+        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
 
         Intent intent;
 
         if (isFirstTimeLaunch) {
-            // First time user, show onboarding
+            // First time: show Onboarding
             intent = new Intent(SplashActivity.this, OnboardingActivity.class);
         } else {
-            // Returning user, go directly to main screen
-            intent = new Intent(SplashActivity.this, MainActivity.class);
+            if (isLoggedIn) {
+                // Already logged in, go to Home
+                intent = new Intent(SplashActivity.this, MainActivity.class);
+            } else {
+                // Not logged in, go to Login
+                intent = new Intent(SplashActivity.this, LoginActivity.class);
+            }
         }
 
         startActivity(intent);
-
-        // Apply transition animation
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-
-        // Close this activity
         finish();
     }
 }

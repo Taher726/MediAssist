@@ -74,13 +74,15 @@
                 android:orientation="horizontal">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/medicationsCard"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="12dp"
                     android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1">
+                    android:background="@drawable/btn_background_1"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                    <!-- Image médicale modifiée pour être redimensionnée et centrée -->
                     <ImageView
                         android:id="@+id/medications"
                         android:layout_width="100dp"
@@ -107,13 +109,15 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/renderVousCard"
                     android:layout_width="0dp"
                     android:layout_height="170dp"
                     android:layout_marginStart="12dp"
                     android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1">
+                    android:background="@drawable/btn_background_1"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                    <!-- Image médicale modifiée pour être redimensionnée et centrée -->
                     <ImageView
                         android:id="@+id/renderVous"
                         android:layout_width="100dp"
@@ -149,13 +153,15 @@
                 android:orientation="horizontal">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/ordannanceCard"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="12dp"
                     android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1">
+                    android:background="@drawable/btn_background_1"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                    <!-- Image médicale modifiée pour être redimensionnée et centrée -->
                     <ImageView
                         android:id="@+id/ordannance"
                         android:layout_width="100dp"
@@ -182,13 +188,15 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/horaireCard"
                     android:layout_width="0dp"
                     android:layout_height="170dp"
                     android:layout_marginStart="12dp"
                     android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1">
+                    android:background="@drawable/btn_background_1"
+                    android:clickable="true"
+                    android:focusable="true">
 
-                    <!-- Image médicale modifiée pour être redimensionnée et centrée -->
                     <ImageView
                         android:id="@+id/horaire"
                         android:layout_width="100dp"
@@ -340,7 +348,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation Bar - Now outside the ScrollView -->
+    <!-- Bottom Navigation Bar - Outside the ScrollView -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
@@ -372,7 +380,9 @@
                     android:layout_height="30dp"
                     android:layout_weight="1"
                     android:src="@drawable/home"
-                    android:contentDescription="Home" />
+                    android:contentDescription="Home"
+                    android:clickable="true"
+                    android:focusable="true" />
 
                 <!-- Medication -->
                 <ImageView
@@ -381,7 +391,9 @@
                     android:layout_height="30dp"
                     android:layout_weight="1"
                     android:src="@drawable/stethoscope"
-                    android:contentDescription="Medication" />
+                    android:contentDescription="Medication"
+                    android:clickable="true"
+                    android:focusable="true" />
 
                 <!-- Rendez-vous -->
                 <ImageView
@@ -390,7 +402,9 @@
                     android:layout_height="30dp"
                     android:layout_weight="1"
                     android:src="@drawable/appointment"
-                    android:contentDescription="Rendez-vous" />
+                    android:contentDescription="Rendez-vous"
+                    android:clickable="true"
+                    android:focusable="true" />
 
                 <!-- Ordonnances -->
                 <ImageView
@@ -399,7 +413,9 @@
                     android:layout_height="30dp"
                     android:layout_weight="1"
                     android:src="@drawable/prescription_black"
-                    android:contentDescription="Ordonnances" />
+                    android:contentDescription="Ordonnances"
+                    android:clickable="true"
+                    android:focusable="true" />
 
                 <!-- Profile -->
                 <ImageView
@@ -408,7 +424,9 @@
                     android:layout_height="30dp"
                     android:layout_weight="1"
                     android:src="@drawable/useravatar"
-                    android:contentDescription="Profile" />
+                    android:contentDescription="Profile"
+                    android:clickable="true"
+                    android:focusable="true" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

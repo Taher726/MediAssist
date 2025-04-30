@@ -30,6 +30,10 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <!-- Login and Register Activity -->
+        <activity android:name=".ui.auth.LoginActivity"/>
+        <activity android:name=".ui.auth.RegisterActivity"/>
+
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
@@ -40,6 +44,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.medication.MedicationsActivity"/>
+        <activity android:name=".ui.rendezvous.RendezVousActivity" />
+        <activity android:name=".ui.ordonnance.OrdonnancesActivity" />
+        <activity android:name=".ui.horaire.HoraireActivity" />
+        <activity android:name=".ui.profile.ProfileActivity" />
+
     </application>
 
 </manifest>

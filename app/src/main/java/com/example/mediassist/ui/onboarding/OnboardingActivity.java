@@ -15,6 +15,7 @@ import com.example.mediassist.MainActivity;
 import com.example.mediassist.R;
 import com.example.mediassist.adapter.OnboardingAdapter;
 import com.example.mediassist.data.models.OnboardingItem;
+import com.example.mediassist.ui.auth.LoginActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -177,8 +178,8 @@ public class OnboardingActivity extends AppCompatActivity {
         editor.putBoolean("isFirstTimeLaunch", false);
         editor.apply();
 
-        // Start main activity
-        startActivity(new Intent(OnboardingActivity.this, MainActivity.class));
+        // Start LoginActivity instead of MainActivity
+        startActivity(new Intent(OnboardingActivity.this, LoginActivity.class));
         finish();
     }
 }
