@@ -1,69 +1,97 @@
 package com.example.mediassist.ui.auth;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mediassist.R;
+import com.example.mediassist.data.database.DatabaseHelper;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    EditText nameEditText, emailEditText, passwordEditText, confirmPasswordEditText;
-    Button registerButton;
-    TextView loginTextView;
+    private EditText nameEditText, emailEditText, passwordEditText;
+    private Button registerButton;
+    private TextView loginTextView;
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Make navigation bar transparent
-        getWindow().setNavigationBarColor(Color.TRANSPARENT);
-
-        // Make the content display behind navigation bar (immersive mode)
-        View decorView = getWindow().getDecorView();
-        int flags = decorView.getSystemUiVisibility();
-        flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-        decorView.setSystemUiVisibility(flags);
         setContentView(R.layout.activity_signup);
 
+        // Transparent navigation bar
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+
+        // Initialize database helper
+        dbHelper = DatabaseHelper.getInstance(this);
+        // Do NOT reset the database here!
+
+        // Initialize views
         nameEditText = findViewById(R.id.nameEditText);
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
-        //confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText);
         registerButton = findViewById(R.id.registerButton);
         loginTextView = findViewById(R.id.loginTextView);
 
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String name = nameEditText.getText().toString();
-                String email = emailEditText.getText().toString();
-                String password = passwordEditText.getText().toString();
-                //String confirmPassword = confirmPasswordEditText.getText().toString();
+        registerButton.setOnClickListener(v -> {
+            // Get user inputs
+            String name = nameEditText.getText().toString().trim();
+            String email = emailEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString().trim();
 
-                if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(RegisterActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-                } /*else if (!password.equals(confirmPassword)) {
-                    Toast.makeText(RegisterActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-                }*/ else {
-                    // TODO: Save user data to database (for now we just simulate success)
-                    Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                    finish();
-                }
+            // Validate all fields are filled
+            if (name.isEmpty()) {
+                nameEditText.setError("Name is required");
+                return;
+            }
+
+            if (email.isEmpty()) {
+                emailEditText.setError("Email is required");
+                return;
+            }
+
+            // Validate email format
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                emailEditText.setError("Please enter a valid email address");
+                return;
+            }
+
+            if (password.isEmpty()) {
+                passwordEditText.setError("Password is required");
+                return;
+            }
+
+            // Check if email already exists
+            if (dbHelper.isEmailExists(email)) {
+                emailEditText.setError("Email already registered");
+                return;
+            }
+
+            // Try to register user
+            boolean registered = dbHelper.registerUser(name, email, password);
+
+            if (registered) {
+                Toast.makeText(this, "Registered successfully!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, LoginActivity.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        loginTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                finish();
-            }
+        loginTextView.setOnClickListener(v -> {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         });
     }
 }

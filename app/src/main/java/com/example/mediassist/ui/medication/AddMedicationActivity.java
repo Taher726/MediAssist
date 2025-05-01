@@ -1,158 +1,220 @@
 package com.example.mediassist.ui.medication;
+
+import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.mediassist.R;
-import java.io.FileNotFoundException;
+import com.example.mediassist.data.database.DatabaseHelper;
+import com.example.mediassist.data.models.Medication;
+import com.google.android.material.button.MaterialButton;
+
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 public class AddMedicationActivity extends AppCompatActivity {
-
     private static final int PICK_IMAGE_REQUEST = 1;
     private ImageView imagePicker;
+    private EditText nameInput, typeInput, frequencyInput, dosageInput, notesInput;
+    private MaterialButton addButton;
+    private Button addTimeButton;
+    private LinearLayout timesContainer, daysContainer;
+    private Bitmap selectedImageBitmap;
+    private String selectedImagePath;
+    private List<String> selectedTimes = new ArrayList<>();
+    private List<String> selectedDays = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Transparent nav/status bar
-        getWindow().setNavigationBarColor(Color.TRANSPARENT);
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         setContentView(R.layout.activity_add_medication);
 
-        imagePicker = findViewById(R.id.imagePicker);
-        ImageView backIcon = findViewById(R.id.backIcon);
+        initializeViews();
+        setupDayCheckboxes();
+        setupClickListeners();
 
+        // Ensure default user exists
+        //DatabaseHelper.getInstance(this).ensureDefaultUserExists();
+    }
+
+    private void initializeViews() {
+        imagePicker = findViewById(R.id.imagePicker);
+        nameInput = findViewById(R.id.nameInput);
+        typeInput = findViewById(R.id.typeInput);
+        frequencyInput = findViewById(R.id.frequencyInput);
+        dosageInput = findViewById(R.id.dosageInput);
+        notesInput = findViewById(R.id.notesInput);
+        addButton = findViewById(R.id.addButton);
+        addTimeButton = findViewById(R.id.addTimeButton);
+        timesContainer = findViewById(R.id.timesContainer);
+        daysContainer = findViewById(R.id.daysContainer);
+    }
+
+    private void setupDayCheckboxes() {
+        String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+        for (String day : daysOfWeek) {
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(day);
+            checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedDays.add(day);
+                } else {
+                    selectedDays.remove(day);
+                }
+            });
+            daysContainer.addView(checkBox);
+        }
+    }
+
+    private void setupClickListeners() {
+        findViewById(R.id.backIcon).setOnClickListener(v -> finish());
         imagePicker.setOnClickListener(v -> openImageChooser());
-        backIcon.setOnClickListener(v -> finish());
+        addButton.setOnClickListener(v -> saveMedication());
+        addTimeButton.setOnClickListener(v -> showTimePicker());
+    }
+
+    private void showTimePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+                this,
+                (view, hourOfDay, minute1) -> {
+                    String time = String.format("%02d:%02d", hourOfDay, minute1);
+                    if (!selectedTimes.contains(time)) {
+                        selectedTimes.add(time);
+                        addTimeView(time);
+                    } else {
+                        Toast.makeText(this, "This time is already added", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                hour,
+                minute,
+                true
+        );
+        timePickerDialog.setTitle("Select Medication Time");
+        timePickerDialog.show();
+    }
+
+    private void addTimeView(String time) {
+        View timeView = getLayoutInflater().inflate(R.layout.time_item, null);
+        TextView timeText = timeView.findViewById(R.id.timeText);
+        ImageView deleteIcon = timeView.findViewById(R.id.deleteTimeIcon);
+
+        timeText.setText(time);
+        deleteIcon.setOnClickListener(v -> {
+            selectedTimes.remove(time);
+            timesContainer.removeView(timeView);
+        });
+
+        timesContainer.addView(timeView);
     }
 
     private void openImageChooser() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Medication Image"), PICK_IMAGE_REQUEST);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri selectedImageUri = data.getData();
             try {
-                // Load and fix the image rotation
-                Bitmap correctBitmap = handleSamplingAndRotationBitmap(selectedImageUri);
-                if (correctBitmap != null) {
-                    imagePicker.setImageBitmap(correctBitmap);
-                } else {
-                    // Fallback to the old method if the new one fails
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
-                    imagePicker.setImageBitmap(bitmap);
-                }
+                selectedImageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+                imagePicker.setImageBitmap(selectedImageBitmap);
+                selectedImagePath = data.getData().toString();
             } catch (IOException e) {
                 Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
+                Log.e("AddMedication", "Image load error", e);
             }
         }
     }
 
-    /**
-     * This method is responsible for handling the image rotation based on EXIF data
-     */
-    private Bitmap handleSamplingAndRotationBitmap(Uri selectedImage) throws IOException {
-        // First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        InputStream imageStream = getContentResolver().openInputStream(selectedImage);
-        BitmapFactory.decodeStream(imageStream, null, options);
-        imageStream.close();
+    private void saveMedication() {
+        String name = nameInput.getText().toString().trim();
+        String type = typeInput.getText().toString().trim();
+        String frequency = frequencyInput.getText().toString().trim();
+        String dosage = dosageInput.getText().toString().trim();
+        String notes = notesInput.getText().toString().trim();
 
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, 1200, 1200);
+        if (name.isEmpty()) {
+            showError("Please enter medication name");
+            return;
+        }
+        if (selectedTimes.isEmpty()) {
+            showError("Please add at least one time");
+            return;
+        }
+        if (selectedDays.isEmpty()) {
+            showError("Please select at least one day");
+            return;
+        }
 
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        imageStream = getContentResolver().openInputStream(selectedImage);
-        Bitmap img = BitmapFactory.decodeStream(imageStream, null, options);
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Saving medication...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
 
-        img = rotateImageIfRequired(img, selectedImage);
-        return img;
-    }
+        new Thread(() -> {
+            try {
+                Medication medication = new Medication();
+                medication.setName(name);
+                medication.setType(type);
+                medication.setFrequency(frequency);
+                medication.setDosage(dosage);
+                medication.setTime(String.join(",", selectedTimes));
+                medication.setDays(String.join(",", selectedDays));
+                medication.setNotes(notes);
+                medication.setStatus("Active");
 
-    /**
-     * Calculate an inSampleSize for use in a BitmapFactory.Options object when decoding
-     * bitmaps using the decode* methods from BitmapFactory.
-     */
-    private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
+                if (selectedImageBitmap != null) {
+                    medication.setImageData(DatabaseHelper.getBytesFromBitmap(selectedImageBitmap));
+                }
+                medication.setImagePath(selectedImagePath);
 
-        if (height > reqHeight || width > reqWidth) {
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
+                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
+                long medicationId = dbHelper.addMedication(medication, "user@example.com");
 
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    if (medicationId != -1) {
+                        Toast.makeText(AddMedicationActivity.this, "Medication added successfully", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        showError("Failed to add medication. Please try again.");
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    showError("Error: " + e.getMessage());
+                    Log.e("AddMedication", "Save error", e);
+                });
             }
-        }
-
-        return inSampleSize;
+        }).start();
     }
 
-    /**
-     * Rotate an image if required.
-     */
-    private Bitmap rotateImageIfRequired(Bitmap img, Uri selectedImage) throws IOException {
-        ExifInterface ei = new ExifInterface(getContentResolver().openInputStream(selectedImage));
-        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                return rotateImage(img, 90);
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                return rotateImage(img, 180);
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                return rotateImage(img, 270);
-            default:
-                return img;
-        }
-    }
-
-
-    private static Bitmap rotateImage(Bitmap img, int degree) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(degree);
-        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
-        img.recycle();
-        return rotatedImg;
-    }
-
-    // Helper method to get real path from URI
-    private String getRealPathFromURI(Uri contentUri) {
-        String[] proj = {MediaStore.Images.Media.DATA};
-        android.database.Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor == null) {
-            return null;
-        }
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String path = cursor.getString(column_index);
-        cursor.close();
-        return path;
+    private void showError(String message) {
+        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
     }
 }

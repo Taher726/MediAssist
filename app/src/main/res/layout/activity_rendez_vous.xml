@@ -18,7 +18,7 @@
         android:padding="16dp"
         android:text="Rendez-vous"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textSize="23sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"

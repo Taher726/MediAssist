@@ -9,4 +9,6 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="primary">#6672FF</color>
+    <color name="active_green">#4CAF50</color>
+    <color name="inactive_red">#F44336</color>
 </resources>

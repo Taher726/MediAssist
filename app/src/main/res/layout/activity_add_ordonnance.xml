@@ -16,7 +16,7 @@
         android:gravity="center"
         android:text="Ajouter une ordonnance"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textSize="23sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -27,10 +27,10 @@
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
         android:src="@drawable/back"
-        android:tint="@android:color/white"
         app:layout_constraintTop_toTopOf="@id/topAppBar"
         app:layout_constraintBottom_toBottomOf="@id/topAppBar"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@android:color/white" />
 
     <!-- Content -->
     <ScrollView

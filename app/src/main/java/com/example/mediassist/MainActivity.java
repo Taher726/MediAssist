@@ -12,6 +12,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.mediassist.data.database.UserSession;
+import com.example.mediassist.ui.auth.LoginActivity;
 import com.example.mediassist.ui.horaire.HoraireActivity;
 import com.example.mediassist.ui.medication.MedicationsActivity;
 import com.example.mediassist.ui.ordonnance.OrdonnancesActivity;
@@ -29,6 +31,12 @@ public class MainActivity extends AppCompatActivity {
     // Statistics
     private TextView totalMedi, totalRendez, totalOrdo;
 
+    // User session manager
+    private UserSession userSession;
+
+    // User welcome message
+    private TextView welcomeText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,8 +48,27 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Initialize user session
+        userSession = new UserSession(this);
+
+        // Check if user is logged in, if not redirect to login
+        if (!userSession.isLoggedIn()) {
+            Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(loginIntent);
+            finish();
+            return;
+        }
+
         // Initialize UI components
         initializeViews();
+
+        // Set user name in welcome message
+        String userName = userSession.getUserName();
+        if (userName != null && !userName.isEmpty()) {
+            welcomeText.setText("Bienvenue " + userName);
+        }
 
         // Set click listeners
         setNavigationListeners();
@@ -69,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
         totalMedi = findViewById(R.id.totalMedi);
         totalRendez = findViewById(R.id.totalRendez);
         totalOrdo = findViewById(R.id.totalOrdo);
+
+        // Welcome text
+        welcomeText = findViewById(R.id.textView2);
     }
 
     private void setNavigationListeners() {
@@ -136,9 +166,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadStatistics() {
-        // Mock data - in a real app, these would come from a database
+        // In a real app, these would come from a database
+        // For now, using mock data but this could be enhanced to load real user data
+        String userEmail = userSession.getUserEmail();
+        // TODO: Load actual statistics based on the logged-in user
         totalMedi.setText("5");
         totalRendez.setText("3");
         totalOrdo.setText("7");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check login status on resume
+        if (!userSession.isLoggedIn()) {
+            userSession.logout(); // This will redirect to login screen
+        }
     }
 }

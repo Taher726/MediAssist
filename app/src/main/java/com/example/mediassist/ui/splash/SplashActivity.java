@@ -1,4 +1,5 @@
 package com.example.mediassist.ui.splash;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -7,14 +8,15 @@ import android.os.Handler;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.mediassist.MainActivity;
 import com.example.mediassist.R;
+import com.example.mediassist.data.database.DatabaseHelper;
 import com.example.mediassist.ui.auth.LoginActivity;
 import com.example.mediassist.ui.onboarding.OnboardingActivity;
 
 public class SplashActivity extends AppCompatActivity {
 
-    // Splash screen duration in milliseconds
     private static final int SPLASH_TIMEOUT = 2000; // 2 seconds
 
     @Override
@@ -37,13 +39,18 @@ public class SplashActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        // Handler to delay and then navigate
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                checkFirstTimeUser();
-            }
-        }, SPLASH_TIMEOUT);
+        // Initialize database in background
+        new Thread(() -> {
+            // This ensures database is created and default user exists
+            DatabaseHelper.getInstance(SplashActivity.this);
+
+            runOnUiThread(() -> {
+                // Handler to delay and then navigate
+                new Handler().postDelayed(() -> {
+                    checkFirstTimeUser();
+                }, SPLASH_TIMEOUT);
+            });
+        }).start();
     }
 
     private void checkFirstTimeUser() {
@@ -56,6 +63,8 @@ public class SplashActivity extends AppCompatActivity {
         if (isFirstTimeLaunch) {
             // First time: show Onboarding
             intent = new Intent(SplashActivity.this, OnboardingActivity.class);
+            // Mark that we've launched at least once
+            prefs.edit().putBoolean("isFirstTimeLaunch", false).apply();
         } else {
             if (isLoggedIn) {
                 // Already logged in, go to Home

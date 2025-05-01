@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/medIcon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/medicine_placeholder"
+            android:scaleType="centerCrop"/>
+
+        <TextView
+            android:id="@+id/medName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:text="Medication Name"
+            android:textColor="#000"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/statusIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="Active"
+            android:textColor="@color/active_green"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medName"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="Type: Tablet"
+            android:textColor="#666"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medFrequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medType"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="Frequency: Daily"
+            android:textColor="#666"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medDosage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medFrequency"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="Dosage: 1 tablet"
+            android:textColor="#666"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medTimes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medDosage"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="Times: 08:00, 20:00"
+            android:textColor="#666"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medDays"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medTimes"
+            android:layout_toRightOf="@id/medIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:text="Days: Monday, Wednesday, Friday"
+            android:textColor="#666"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/medNotes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/medDays"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="Notes: Take with food"
+            android:textColor="#666"
+            android:textSize="14sp"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/deleteIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/delete_icon"
+            app:tint="#FF0000" />
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>
