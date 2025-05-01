@@ -49,6 +49,7 @@
         <activity android:name=".ui.ordonnance.OrdonnancesActivity" />
         <activity android:name=".ui.horaire.HoraireActivity" />
         <activity android:name=".ui.profile.ProfileActivity" />
+        <activity android:name=".ui.medication.AddMedicationActivity" />
 
     </application>
 
