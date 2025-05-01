@@ -1,189 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.profile.ProfileActivity">
+    android:background="#EFF0FC"
+    android:fitsSystemWindows="true"
+    tools:context=".MainActivity">
 
+    <!-- ✅ Top AppBar (uniforme) -->
+    <TextView
+        android:id="@+id/topAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#6672FF"
+        android:gravity="center"
+        android:text="Profile"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ✅ Scrollable Content -->
     <ScrollView
-        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:backgroundTint="#EFF0FC"
-        android:paddingBottom="80dp"
-        android:clipToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="16dp">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="24dp">
-
-                <ImageView
-                    android:id="@+id/backButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@android:drawable/ic_menu_revert" />
-
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Rendez-vous"
-                    android:textColor="@color/black"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/backButton"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <!-- Contenu de la page Rendez-vous -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
+            <!-- ✅ Profile Picture -->
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
                 android:layout_marginTop="24dp"
-                android:layout_marginEnd="24dp"
-                android:text="Prochains rendez-vous"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"/>
+                android:src="@drawable/profile" />
 
-            <!-- Calendrier simplifié -->
-            <CalendarView
-                android:id="@+id/calendarView"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="24dp" />
-
-            <!-- Liste de rendez-vous (exemple) -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="#E6F7FF"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Dr. Martin - Cardiologue"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="5 mai 2025 - 10:30"
-                        android:textSize="16sp"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="15 Avenue de la République, 75011 Paris"
-                        android:textSize="14sp"
-                        android:textStyle="italic"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="#FFE6E6"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Dr. Dupont - Généraliste"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="12 mai 2025 - 14:15"
-                        android:textSize="16sp"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="8 Rue des Lilas, 75019 Paris"
-                        android:textSize="14sp"
-                        android:textStyle="italic"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Bouton pour ajouter un rendez-vous -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/addAppointmentButton"
+            <!-- ✅ Name -->
+            <TextView
+                android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="80dp"
-                android:contentDescription="Ajouter un rendez-vous"
-                app:srcCompat="@android:drawable/ic_input_add" />
+                android:text="Lion Fischer"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginTop="12dp"/>
 
+            <!-- ✅ Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="32dp">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    android:backgroundTint="#6672FF">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/iconSettings"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/parametres_compte"
+                            android:layout_marginEnd="16dp" />
+
+                        <TextView
+                            android:id="@+id/textSettings"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Paramètres du compte"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    android:backgroundTint="#6672FF">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/iconInfo"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/informations_compte"
+                            android:layout_marginEnd="16dp" />
+
+                        <TextView
+                            android:id="@+id/textInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Informations personnelles"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardNotifications"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    android:backgroundTint="#6672FF">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/iconNotifications"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/notifications_compte"
+                            android:layout_marginEnd="16dp" />
+
+                        <TextView
+                            android:id="@+id/textNotifications"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Notifications"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation Bar - Outside the ScrollView -->
+    <!-- ✅ Bottom Navigation -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Custom Navbar Container -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -199,62 +197,12 @@
                 android:gravity="center"
                 android:padding="8dp">
 
-                <!-- Home -->
-                <ImageView
-                    android:id="@+id/homeIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:src="@drawable/home"
-                    android:contentDescription="Home"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <!-- Medication -->
-                <ImageView
-                    android:id="@+id/medicationIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:src="@drawable/stethoscope"
-                    android:contentDescription="Medication"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <!-- Rendez-vous -->
-                <ImageView
-                    android:id="@+id/renderVousIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:src="@drawable/appointment"
-                    android:contentDescription="Rendez-vous"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <!-- Ordonnances -->
-                <ImageView
-                    android:id="@+id/ordannanceIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:src="@drawable/prescription_black"
-                    android:contentDescription="Ordonnances"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <!-- Profile -->
-                <ImageView
-                    android:id="@+id/profileIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:src="@drawable/useravatar"
-                    android:contentDescription="Profile"
-                    android:clickable="true"
-                    android:focusable="true" />
+                <ImageView android:id="@+id/homeIcon" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:src="@drawable/home" />
+                <ImageView android:id="@+id/medicationIcon" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:src="@drawable/stethoscope" />
+                <ImageView android:id="@+id/renderVousIcon" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:src="@drawable/appointment" />
+                <ImageView android:id="@+id/ordannanceIcon" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:src="@drawable/prescription_black" />
+                <ImageView android:id="@+id/profileIcon" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:src="@drawable/useravatar" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

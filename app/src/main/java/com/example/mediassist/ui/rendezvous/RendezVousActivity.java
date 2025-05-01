@@ -1,6 +1,8 @@
 package com.example.mediassist.ui.rendezvous;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,6 +11,7 @@ import com.example.mediassist.R;
 import com.example.mediassist.ui.medication.MedicationsActivity;
 import com.example.mediassist.ui.ordonnance.OrdonnancesActivity;
 import com.example.mediassist.ui.profile.ProfileActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class RendezVousActivity extends AppCompatActivity {
 
@@ -18,10 +21,20 @@ public class RendezVousActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Transparent nav/status bar
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         setContentView(R.layout.activity_rendez_vous);
 
         // Initialize and set up bottom navigation
         initializeNavigation();
+        FloatingActionButton addButton = findViewById(R.id.addAppointmentButton);
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(RendezVousActivity.this, AddRendezVousActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void initializeNavigation() {

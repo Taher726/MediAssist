@@ -80,7 +80,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@null"
-                    android:hint="Search medications here..."
+                    android:hint="Recherchez des médicaments ici..."
                     android:textSize="14sp"
                     android:inputType="text" />
             </LinearLayout>
