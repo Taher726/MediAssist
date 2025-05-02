@@ -3,6 +3,7 @@ package com.example.mediassist.ui.medication;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -32,6 +33,14 @@ import java.util.List;
 
 public class AddMedicationActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
+    private static final String DEFAULT_USER_EMAIL = "user@example.com";
+    private static final String DEFAULT_USER_NAME = "Default User";
+    private static final String DEFAULT_USER_PASSWORD = "password123";
+
+    // Add these constants at the top of your AddMedicationActivity class
+    private static final String SHARED_PREF_NAME = "mypref";
+    private static final String KEY_EMAIL = "email";
+
     private ImageView imagePicker;
     private EditText nameInput, typeInput, frequencyInput, dosageInput, notesInput;
     private MaterialButton addButton;
@@ -51,8 +60,25 @@ public class AddMedicationActivity extends AppCompatActivity {
         setupDayCheckboxes();
         setupClickListeners();
 
-        // Ensure default user exists
-        //DatabaseHelper.getInstance(this).ensureDefaultUserExists();
+        // Ensure default user exists - important for the app to work correctly
+        ensureDefaultUserExists();
+    }
+
+    // Method to ensure a default user exists in the database
+    private void ensureDefaultUserExists() {
+        new Thread(() -> {
+            try {
+                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
+                if (!dbHelper.isEmailExists(DEFAULT_USER_EMAIL)) {
+                    boolean success = dbHelper.registerUser(DEFAULT_USER_NAME, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD);
+                    Log.d("AddMedication", "Created default user: " + success);
+                } else {
+                    Log.d("AddMedication", "Default user already exists");
+                }
+            } catch (Exception e) {
+                Log.e("AddMedication", "Error ensuring default user exists", e);
+            }
+        }).start();
     }
 
     private void initializeViews() {
@@ -157,6 +183,7 @@ public class AddMedicationActivity extends AppCompatActivity {
         String dosage = dosageInput.getText().toString().trim();
         String notes = notesInput.getText().toString().trim();
 
+        // Validate inputs
         if (name.isEmpty()) {
             showError("Please enter medication name");
             return;
@@ -177,6 +204,18 @@ public class AddMedicationActivity extends AppCompatActivity {
 
         new Thread(() -> {
             try {
+                // Always double-check that default user exists right before saving
+                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
+                // Get the user email from SharedPreferences
+                SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+                String userEmail = sharedPreferences.getString(KEY_EMAIL, "");
+
+                if (userEmail.isEmpty()) {
+                    Toast.makeText(this, "User not logged in. Please login first.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                // Prep the medication object
                 Medication medication = new Medication();
                 medication.setName(name);
                 medication.setType(type);
@@ -192,8 +231,11 @@ public class AddMedicationActivity extends AppCompatActivity {
                 }
                 medication.setImagePath(selectedImagePath);
 
-                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
-                long medicationId = dbHelper.addMedication(medication, "user@example.com");
+                // Now add the medication
+                long medicationId = dbHelper.addMedication(medication, userEmail);
+
+                // Log the result
+                Log.d("AddMedication", "Medication added with ID: " + medicationId);
 
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
@@ -205,10 +247,10 @@ public class AddMedicationActivity extends AppCompatActivity {
                     }
                 });
             } catch (Exception e) {
+                Log.e("AddMedication", "Save error", e);
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     showError("Error: " + e.getMessage());
-                    Log.e("AddMedication", "Save error", e);
                 });
             }
         }).start();

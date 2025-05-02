@@ -1,6 +1,7 @@
 package com.example.mediassist.ui.medication;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -30,6 +31,11 @@ public class MedicationsActivity extends AppCompatActivity {
     private LinearLayout medicationsContainer;
     private DatabaseHelper dbHelper;
     private FloatingActionButton addMedicationButton;
+    private String userEmail;
+
+    // Match your SharedPreferences constants
+    private static final String SHARED_PREF_NAME = "mypref";
+    private static final String KEY_EMAIL = "email";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +48,15 @@ public class MedicationsActivity extends AppCompatActivity {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         setContentView(R.layout.activity_medications);
+
+        // Get the user email from SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
+        userEmail = sharedPreferences.getString(KEY_EMAIL, "");
+
+        if (userEmail.isEmpty()) {
+            Toast.makeText(this, "User not logged in. Please login first.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         initializeViews();
         setupNavigation();
@@ -88,7 +103,7 @@ public class MedicationsActivity extends AppCompatActivity {
 
     private void loadMedications() {
         medicationsContainer.removeAllViews();
-        String userEmail = "user@example.com";
+
         List<Medication> medications = dbHelper.getMedicationsForUser(userEmail);
 
         if (medications.isEmpty()) {
