@@ -52,6 +52,7 @@
         <activity android:name=".ui.medication.AddMedicationActivity" />
         <activity android:name=".ui.rendezvous.AddRendezVousActivity" />
         <activity android:name=".ui.ordonnance.AddPrescriptionActivity" />
+        <activity android:name=".ui.urgence.UrgenceActivity" />
 
     </application>
 

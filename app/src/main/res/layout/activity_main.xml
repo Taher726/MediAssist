@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:backgroundTint="#EFF0FC"
     tools:context=".MainActivity">
 
     <ScrollView
@@ -12,8 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:backgroundTint="#EFF0FC"
-        android:paddingBottom="80dp"
         android:clipToPadding="false"
+        android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,10 +72,11 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="24dp"
+                android:layout_marginBottom="25dp"
                 android:orientation="horizontal">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/medicationsCard"
+                    android:id="@+id/urgenceCard"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="12dp"
@@ -84,7 +86,7 @@
                     android:focusable="true">
 
                     <ImageView
-                        android:id="@+id/medications"
+                        android:id="@+id/urgence"
                         android:layout_width="100dp"
                         android:layout_height="100dp"
                         android:scaleType="fitCenter"
@@ -93,98 +95,19 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintVertical_bias="0.4"
-                        app:srcCompat="@drawable/medications" />
+                        app:srcCompat="@drawable/urgence_call" />
 
                     <TextView
-                        android:id="@+id/medicationsText"
+                        android:id="@+id/urgenceText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Médications"
+                        android:text="Urgence"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="@+id/medications"
-                        app:layout_constraintStart_toStartOf="@+id/medications"
-                        app:layout_constraintTop_toBottomOf="@+id/medications" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/renderVousCard"
-                    android:layout_width="0dp"
-                    android:layout_height="170dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:id="@+id/renderVous"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:scaleType="fitCenter"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintVertical_bias="0.4"
-                        app:srcCompat="@drawable/appointment_white" />
-
-                    <TextView
-                        android:id="@+id/renderVousText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Rendez-vous"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="@+id/renderVous"
-                        app:layout_constraintStart_toStartOf="@+id/renderVous"
-                        app:layout_constraintTop_toBottomOf="@+id/renderVous" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="24dp"
-                android:layout_marginEnd="24dp"
-                android:orientation="horizontal">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/ordannanceCard"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="12dp"
-                    android:layout_weight="0.5"
-                    android:background="@drawable/btn_background_1"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:id="@+id/ordannance"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:scaleType="fitCenter"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintVertical_bias="0.4"
-                        app:srcCompat="@drawable/prescription_white" />
-
-                    <TextView
-                        android:id="@+id/ordannanceText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Ordonnances"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="@+id/ordannance"
-                        app:layout_constraintStart_toStartOf="@+id/ordannance"
-                        app:layout_constraintTop_toBottomOf="@+id/ordannance" />
+                        app:layout_constraintEnd_toEndOf="@+id/urgence"
+                        app:layout_constraintStart_toStartOf="@+id/urgence"
+                        app:layout_constraintTop_toBottomOf="@+id/urgence" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -223,25 +146,6 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="24dp"
-                android:layout_marginEnd="24dp"
-                android:layout_marginBottom="16dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Statistiques"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -369,8 +273,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:orientation="horizontal"
                 android:gravity="center"
+                android:orientation="horizontal"
                 android:padding="8dp">
 
                 <!-- Home -->
@@ -379,10 +283,10 @@
                     android:layout_width="0dp"
                     android:layout_height="30dp"
                     android:layout_weight="1"
-                    android:src="@drawable/home"
-                    android:contentDescription="Home"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Home"
+                    android:focusable="true"
+                    android:src="@drawable/home" />
 
                 <!-- Medication -->
                 <ImageView
@@ -390,10 +294,10 @@
                     android:layout_width="0dp"
                     android:layout_height="30dp"
                     android:layout_weight="1"
-                    android:src="@drawable/stethoscope"
-                    android:contentDescription="Medication"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Medication"
+                    android:focusable="true"
+                    android:src="@drawable/stethoscope" />
 
                 <!-- Rendez-vous -->
                 <ImageView
@@ -401,10 +305,10 @@
                     android:layout_width="0dp"
                     android:layout_height="30dp"
                     android:layout_weight="1"
-                    android:src="@drawable/appointment"
-                    android:contentDescription="Rendez-vous"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Rendez-vous"
+                    android:focusable="true"
+                    android:src="@drawable/appointment" />
 
                 <!-- Ordonnances -->
                 <ImageView
@@ -412,10 +316,10 @@
                     android:layout_width="0dp"
                     android:layout_height="30dp"
                     android:layout_weight="1"
-                    android:src="@drawable/prescription_black"
-                    android:contentDescription="Ordonnances"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Ordonnances"
+                    android:focusable="true"
+                    android:src="@drawable/prescription_black" />
 
                 <!-- Profile -->
                 <ImageView
@@ -423,10 +327,10 @@
                     android:layout_width="0dp"
                     android:layout_height="30dp"
                     android:layout_weight="1"
-                    android:src="@drawable/useravatar"
-                    android:contentDescription="Profile"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Profile"
+                    android:focusable="true"
+                    android:src="@drawable/useravatar" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

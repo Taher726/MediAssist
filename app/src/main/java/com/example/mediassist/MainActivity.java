@@ -1,5 +1,7 @@
 package com.example.mediassist;
 import android.content.Intent;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,6 +21,7 @@ import com.example.mediassist.ui.medication.MedicationsActivity;
 import com.example.mediassist.ui.ordonnance.OrdonnancesActivity;
 import com.example.mediassist.ui.profile.ProfileActivity;
 import com.example.mediassist.ui.rendezvous.RendezVousActivity;
+import com.example.mediassist.ui.urgence.UrgenceActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView homeIcon, medicationIcon, renderVousIcon, ordannanceIcon, profileIcon;
 
     // Card Views
-    private ConstraintLayout medicationsCard, renderVousCard, ordannanceCard, horaireCard;
+    private ConstraintLayout urgenceCard, horaireCard;
 
     // Statistics
     private TextView totalMedi, totalRendez, totalOrdo;
@@ -40,6 +43,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Transparent nav/status bar
+        // Transparent nav bar and colored status bar
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(Color.parseColor("#6672FF"));
+        }
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -87,9 +98,7 @@ public class MainActivity extends AppCompatActivity {
         profileIcon = findViewById(R.id.profileIcon);
 
         // Cards
-        medicationsCard = findViewById(R.id.medicationsCard);
-        renderVousCard = findViewById(R.id.renderVousCard);
-        ordannanceCard = findViewById(R.id.ordannanceCard);
+        urgenceCard = findViewById(R.id.urgenceCard);
         horaireCard = findViewById(R.id.horaireCard);
 
         // Statistics
@@ -148,18 +157,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setCardListeners() {
         // Set click listeners for each card
-        medicationsCard.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, MedicationsActivity.class));
+        urgenceCard.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, UrgenceActivity.class));
         });
-
-        renderVousCard.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, RendezVousActivity.class));
-        });
-
-        ordannanceCard.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, OrdonnancesActivity.class));
-        });
-
         horaireCard.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, HoraireActivity.class));
         });
