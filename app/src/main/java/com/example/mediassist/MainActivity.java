@@ -1,8 +1,10 @@
 package com.example.mediassist;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -10,10 +12,12 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.mediassist.data.database.DatabaseHelper;
 import com.example.mediassist.data.database.UserSession;
 import com.example.mediassist.ui.auth.LoginActivity;
 import com.example.mediassist.ui.horaire.HoraireActivity;
@@ -22,8 +26,10 @@ import com.example.mediassist.ui.ordonnance.OrdonnancesActivity;
 import com.example.mediassist.ui.profile.ProfileActivity;
 import com.example.mediassist.ui.rendezvous.RendezVousActivity;
 import com.example.mediassist.ui.urgence.UrgenceActivity;
+import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     // Bottom Navigation Icons
     private ImageView homeIcon, medicationIcon, renderVousIcon, ordannanceIcon, profileIcon;
@@ -36,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
 
     // User session manager
     private UserSession userSession;
+
+    // Database helper
+    private DatabaseHelper dbHelper;
 
     // User welcome message
     private TextView welcomeText;
@@ -59,8 +68,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Initialize user session
+        // Initialize user session and database
         userSession = new UserSession(this);
+        dbHelper = DatabaseHelper.getInstance(this);
 
         // Check if user is logged in, if not redirect to login
         if (!userSession.isLoggedIn()) {
@@ -85,8 +95,31 @@ public class MainActivity extends AppCompatActivity {
         setNavigationListeners();
         setCardListeners();
 
-        // Set mock data for statistics
-        loadStatistics();
+        // Load real statistics from database
+        loadStatisticsFromDatabase();
+
+        // Request notification permissions for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        101);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check login status on resume
+        if (!userSession.isLoggedIn()) {
+            userSession.logout(); // This will redirect to login screen
+            return;
+        }
+
+        // Refresh statistics each time the activity is resumed
+        loadStatisticsFromDatabase();
     }
 
     private void initializeViews() {
@@ -119,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
             // Already on home page, do nothing or refresh
             resetNavigationColors();
             homeIcon.setColorFilter(getResources().getColor(R.color.primary));
+            loadStatisticsFromDatabase(); // Refresh statistics
         });
 
         medicationIcon.setOnClickListener(v -> {
@@ -165,22 +199,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loadStatistics() {
-        // In a real app, these would come from a database
-        // For now, using mock data but this could be enhanced to load real user data
+    /**
+     * Load real statistics from database for the current user
+     */
+    private void loadStatisticsFromDatabase() {
         String userEmail = userSession.getUserEmail();
-        // TODO: Load actual statistics based on the logged-in user
-        totalMedi.setText("5");
-        totalRendez.setText("3");
-        totalOrdo.setText("7");
-    }
+        if (userEmail == null || userEmail.isEmpty()) {
+            Log.e(TAG, "User email is null or empty");
+            return;
+        }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Check login status on resume
-        if (!userSession.isLoggedIn()) {
-            userSession.logout(); // This will redirect to login screen
+        try {
+            // Get the counts from database
+            int medicationCount = dbHelper.getMedicationCount(userEmail);
+            int appointmentCount = dbHelper.getAppointmentCount(userEmail);
+            int prescriptionCount = dbHelper.getPrescriptionCount(userEmail);
+
+            // Update the UI
+            totalMedi.setText(String.valueOf(medicationCount));
+            totalRendez.setText(String.valueOf(appointmentCount));
+            totalOrdo.setText(String.valueOf(prescriptionCount));
+
+            Log.d(TAG, "Statistics updated: Medications=" + medicationCount +
+                    ", Appointments=" + appointmentCount +
+                    ", Prescriptions=" + prescriptionCount);
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading statistics", e);
+            // If there's an error, show zeros
+            totalMedi.setText("0");
+            totalRendez.setText("0");
+            totalOrdo.setText("0");
         }
     }
 }

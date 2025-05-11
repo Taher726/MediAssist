@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#EFF0FC"
+    android:fitsSystemWindows="true">
+
+    <!-- Top App Bar -->
+    <TextView
+        android:id="@+id/topAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#6672FF"
+        android:gravity="center"
+        android:text="Notifications"
+        android:textColor="@android:color/white"
+        android:textSize="23sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Back Button -->
+    <ImageView
+        android:id="@+id/backIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/back"
+        app:layout_constraintTop_toTopOf="@id/topAppBar"
+        app:layout_constraintBottom_toBottomOf="@id/topAppBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@android:color/white" />
+
+    <!-- Clear All Button -->
+    <TextView
+        android:id="@+id/clearAllButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="Effacer tout"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        app:layout_constraintTop_toTopOf="@id/topAppBar"
+        app:layout_constraintBottom_toBottomOf="@id/topAppBar"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Notifications List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/notificationsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Empty State Message -->
+    <TextView
+        android:id="@+id/emptyStateMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aucune notification"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

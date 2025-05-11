@@ -1,17 +1,14 @@
 package com.example.mediassist.ui.medication;
 
-import android.app.ProgressDialog;
-import android.app.TimePickerDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,37 +16,47 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.mediassist.R;
 import com.example.mediassist.data.database.DatabaseHelper;
+import com.example.mediassist.data.database.UserSession;
 import com.example.mediassist.data.models.Medication;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import android.util.Log;
 
 public class AddMedicationActivity extends AppCompatActivity {
+    // And make sure you have this line in your class
+    private static final String TAG = "AddMedicationActivity";
     private static final int PICK_IMAGE_REQUEST = 1;
-    private static final String DEFAULT_USER_EMAIL = "user@example.com";
-    private static final String DEFAULT_USER_NAME = "Default User";
-    private static final String DEFAULT_USER_PASSWORD = "password123";
-
-    // Add these constants at the top of your AddMedicationActivity class
-    private static final String SHARED_PREF_NAME = "mypref";
-    private static final String KEY_EMAIL = "email";
 
     private ImageView imagePicker;
-    private EditText nameInput, typeInput, frequencyInput, dosageInput, notesInput;
-    private MaterialButton addButton;
-    private Button addTimeButton;
+    private TextInputEditText nameInput, typeInput, frequencyInput, dosageInput, notesInput;
+    private Button addTimeButton, addButton;
     private LinearLayout timesContainer, daysContainer;
-    private Bitmap selectedImageBitmap;
-    private String selectedImagePath;
+    private ImageView backIcon;
+
+    private DatabaseHelper dbHelper;
+    private UserSession userSession;
+    private Uri selectedImageUri = null;
+    private byte[] imageData = null;
+
     private List<String> selectedTimes = new ArrayList<>();
     private List<String> selectedDays = new ArrayList<>();
+    private boolean isEditMode = false;
+    private int medicationId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,28 +64,15 @@ public class AddMedicationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_medication);
 
         initializeViews();
-        setupDayCheckboxes();
-        setupClickListeners();
+        setupListeners();
+        initializeDaysUI();
 
-        // Ensure default user exists - important for the app to work correctly
-        ensureDefaultUserExists();
-    }
-
-    // Method to ensure a default user exists in the database
-    private void ensureDefaultUserExists() {
-        new Thread(() -> {
-            try {
-                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
-                if (!dbHelper.isEmailExists(DEFAULT_USER_EMAIL)) {
-                    boolean success = dbHelper.registerUser(DEFAULT_USER_NAME, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD);
-                    Log.d("AddMedication", "Created default user: " + success);
-                } else {
-                    Log.d("AddMedication", "Default user already exists");
-                }
-            } catch (Exception e) {
-                Log.e("AddMedication", "Error ensuring default user exists", e);
-            }
-        }).start();
+        // Check if we're in edit mode
+        if (getIntent().hasExtra("medication_id")) {
+            isEditMode = true;
+            medicationId = getIntent().getIntExtra("medication_id", -1);
+            populateFormForEdit();
+        }
     }
 
     private void initializeViews() {
@@ -88,175 +82,287 @@ public class AddMedicationActivity extends AppCompatActivity {
         frequencyInput = findViewById(R.id.frequencyInput);
         dosageInput = findViewById(R.id.dosageInput);
         notesInput = findViewById(R.id.notesInput);
-        addButton = findViewById(R.id.addButton);
         addTimeButton = findViewById(R.id.addTimeButton);
+        addButton = findViewById(R.id.addButton);
         timesContainer = findViewById(R.id.timesContainer);
         daysContainer = findViewById(R.id.daysContainer);
-    }
+        backIcon = findViewById(R.id.backIcon);
 
-    private void setupDayCheckboxes() {
-        String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-        for (String day : daysOfWeek) {
-            CheckBox checkBox = new CheckBox(this);
-            checkBox.setText(day);
-            checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedDays.add(day);
-                } else {
-                    selectedDays.remove(day);
-                }
-            });
-            daysContainer.addView(checkBox);
+        dbHelper = DatabaseHelper.getInstance(this);
+        userSession = new UserSession(this);
+
+        if (isEditMode) {
+            addButton.setText("Update Medication");
         }
     }
 
-    private void setupClickListeners() {
-        findViewById(R.id.backIcon).setOnClickListener(v -> finish());
-        imagePicker.setOnClickListener(v -> openImageChooser());
+    private void setupListeners() {
+        backIcon.setOnClickListener(v -> finish());
+
+        imagePicker.setOnClickListener(v -> openImagePicker());
+
+        addTimeButton.setOnClickListener(v -> showTimePickerDialog());
+
         addButton.setOnClickListener(v -> saveMedication());
-        addTimeButton.setOnClickListener(v -> showTimePicker());
     }
 
-    private void showTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                this,
-                (view, hourOfDay, minute1) -> {
-                    String time = String.format("%02d:%02d", hourOfDay, minute1);
-                    if (!selectedTimes.contains(time)) {
-                        selectedTimes.add(time);
-                        addTimeView(time);
-                    } else {
-                        Toast.makeText(this, "This time is already added", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                hour,
-                minute,
-                true
-        );
-        timePickerDialog.setTitle("Select Medication Time");
-        timePickerDialog.show();
-    }
-
-    private void addTimeView(String time) {
-        View timeView = getLayoutInflater().inflate(R.layout.time_item, null);
-        TextView timeText = timeView.findViewById(R.id.timeText);
-        ImageView deleteIcon = timeView.findViewById(R.id.deleteTimeIcon);
-
-        timeText.setText(time);
-        deleteIcon.setOnClickListener(v -> {
-            selectedTimes.remove(time);
-            timesContainer.removeView(timeView);
-        });
-
-        timesContainer.addView(timeView);
-    }
-
-    private void openImageChooser() {
+    private void openImagePicker() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Medication Image"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            selectedImageUri = data.getData();
+
             try {
-                selectedImageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
-                imagePicker.setImageBitmap(selectedImageBitmap);
-                selectedImagePath = data.getData().toString();
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+
+                // Resize bitmap to reduce memory usage and database size
+                bitmap = getResizedBitmap(bitmap, 500); // 500px max width/height
+
+                imagePicker.setImageBitmap(bitmap);
+
+                // Convert bitmap to byte array with compression
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
+                imageData = stream.toByteArray();
+
+                Log.d(TAG, "Image selected and processed, size: " + imageData.length + " bytes");
             } catch (IOException e) {
+                e.printStackTrace();
                 Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
-                Log.e("AddMedication", "Image load error", e);
             }
         }
+    }
+
+    // Helper method to resize the bitmap
+    private Bitmap getResizedBitmap(Bitmap image, int maxSize) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float) width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+
+        return Bitmap.createScaledBitmap(image, width, height, true);
+    }
+
+    private void showTimePickerDialog() {
+        View timePickerView = getLayoutInflater().inflate(R.layout.time_picker_dialog, null);
+        TimePicker timePicker = timePickerView.findViewById(R.id.timePicker);
+        timePicker.setIs24HourView(true);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Select Time")
+                .setView(timePickerView)
+                .setPositiveButton("Add", (dialogInterface, i) -> {
+                    int hour = timePicker.getCurrentHour();
+                    int minute = timePicker.getCurrentMinute();
+                    String timeStr = String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+
+                    if (!selectedTimes.contains(timeStr)) {
+                        selectedTimes.add(timeStr);
+                        updateTimesUI();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        dialog.show();
+    }
+
+    private void updateTimesUI() {
+        timesContainer.removeAllViews();
+
+        for (String time : selectedTimes) {
+            View timeView = getLayoutInflater().inflate(R.layout.time_item, null);
+            TextView timeText = timeView.findViewById(R.id.timeText);
+            ImageView deleteIcon = timeView.findViewById(R.id.deleteTimeIcon);
+
+            timeText.setText(time);
+            deleteIcon.setOnClickListener(v -> {
+                selectedTimes.remove(time);
+                updateTimesUI();
+            });
+
+            timesContainer.addView(timeView);
+        }
+    }
+
+    private void initializeDaysUI() {
+        String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+
+        for (String day : daysOfWeek) {
+            View dayView = getLayoutInflater().inflate(R.layout.day_checkbox_item, null);
+            CheckBox dayCheckbox = dayView.findViewById(R.id.dayCheckbox);
+
+            dayCheckbox.setText(day);
+            dayCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    if (!selectedDays.contains(day)) {
+                        selectedDays.add(day);
+                    }
+                } else {
+                    selectedDays.remove(day);
+                }
+            });
+
+            daysContainer.addView(dayView);
+        }
+    }
+
+    private void populateFormForEdit() {
+        // Populate the form with existing medication data
+        nameInput.setText(getIntent().getStringExtra("medication_name"));
+        typeInput.setText(getIntent().getStringExtra("medication_type"));
+        frequencyInput.setText(getIntent().getStringExtra("medication_frequency"));
+        dosageInput.setText(getIntent().getStringExtra("medication_dosage"));
+        notesInput.setText(getIntent().getStringExtra("medication_notes"));
+
+        // Set selected times
+        String times = getIntent().getStringExtra("medication_times");
+        if (times != null && !times.isEmpty()) {
+            selectedTimes = Arrays.asList(times.split(","));
+            updateTimesUI();
+        }
+
+        // Set selected days
+        String days = getIntent().getStringExtra("medication_days");
+        if (days != null && !days.isEmpty()) {
+            selectedDays = new ArrayList<>(Arrays.asList(days.split(",")));
+
+            // Check the corresponding checkboxes
+            for (int i = 0; i < daysContainer.getChildCount(); i++) {
+                View dayView = daysContainer.getChildAt(i);
+                CheckBox dayCheckbox = dayView.findViewById(R.id.dayCheckbox);
+                String day = dayCheckbox.getText().toString();
+
+                if (selectedDays.contains(day)) {
+                    dayCheckbox.setChecked(true);
+                }
+            }
+        }
+
+        // Load the image if available
+        String imagePath = getIntent().getStringExtra("medication_image_path");
+        if (imagePath != null && !imagePath.isEmpty()) {
+            try {
+                Uri imageUri = Uri.parse(imagePath);
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                imagePicker.setImageBitmap(bitmap);
+                selectedImageUri = imageUri;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean validateInputs() {
+        if (nameInput.getText().toString().trim().isEmpty()) {
+            nameInput.setError("Medication name is required");
+            return false;
+        }
+
+        if (typeInput.getText().toString().trim().isEmpty()) {
+            typeInput.setError("Type is required");
+            return false;
+        }
+
+        if (dosageInput.getText().toString().trim().isEmpty()) {
+            dosageInput.setError("Dosage is required");
+            return false;
+        }
+
+        if (selectedTimes.isEmpty()) {
+            Toast.makeText(this, "Please add at least one time", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (selectedDays.isEmpty()) {
+            Toast.makeText(this, "Please select at least one day", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
     }
 
     private void saveMedication() {
-        String name = nameInput.getText().toString().trim();
-        String type = typeInput.getText().toString().trim();
-        String frequency = frequencyInput.getText().toString().trim();
-        String dosage = dosageInput.getText().toString().trim();
-        String notes = notesInput.getText().toString().trim();
-
-        // Validate inputs
-        if (name.isEmpty()) {
-            showError("Please enter medication name");
-            return;
-        }
-        if (selectedTimes.isEmpty()) {
-            showError("Please add at least one time");
-            return;
-        }
-        if (selectedDays.isEmpty()) {
-            showError("Please select at least one day");
+        if (!validateInputs()) {
             return;
         }
 
-        ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Saving medication...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        Medication medication = new Medication();
+        medication.setName(nameInput.getText().toString().trim());
+        medication.setType(typeInput.getText().toString().trim());
+        medication.setFrequency(frequencyInput.getText().toString().trim());
+        medication.setDosage(dosageInput.getText().toString().trim());
+        medication.setNotes(notesInput.getText().toString().trim());
 
-        new Thread(() -> {
-            try {
-                // Always double-check that default user exists right before saving
-                DatabaseHelper dbHelper = DatabaseHelper.getInstance(AddMedicationActivity.this);
-                // Get the user email from SharedPreferences
-                SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE);
-                String userEmail = sharedPreferences.getString(KEY_EMAIL, "");
+        // Join times with comma
+        medication.setTime(String.join(",", selectedTimes));
 
-                if (userEmail.isEmpty()) {
-                    Toast.makeText(this, "User not logged in. Please login first.", Toast.LENGTH_LONG).show();
-                    return;
-                }
+        // Join days with comma
+        medication.setDays(String.join(",", selectedDays));
 
-                // Prep the medication object
-                Medication medication = new Medication();
-                medication.setName(name);
-                medication.setType(type);
-                medication.setFrequency(frequency);
-                medication.setDosage(dosage);
-                medication.setTime(String.join(",", selectedTimes));
-                medication.setDays(String.join(",", selectedDays));
-                medication.setNotes(notes);
-                medication.setStatus("Active");
+        // Set default status
+        medication.setStatus("Active");
 
-                if (selectedImageBitmap != null) {
-                    medication.setImageData(DatabaseHelper.getBytesFromBitmap(selectedImageBitmap));
-                }
-                medication.setImagePath(selectedImagePath);
+        // Set image data
+        if (imageData != null) {
+            medication.setImageData(imageData);
+            Log.d(TAG, "Setting image data size: " + imageData.length + " bytes");
+        }
 
-                // Now add the medication
-                long medicationId = dbHelper.addMedication(medication, userEmail);
+        if (selectedImageUri != null) {
+            medication.setImagePath(selectedImageUri.toString());
+            Log.d(TAG, "Setting image path: " + selectedImageUri);
+        }
 
-                // Log the result
-                Log.d("AddMedication", "Medication added with ID: " + medicationId);
+        String userEmail = userSession.getUserEmail();
 
-                runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    if (medicationId != -1) {
-                        Toast.makeText(AddMedicationActivity.this, "Medication added successfully", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        showError("Failed to add medication. Please try again.");
-                    }
-                });
-            } catch (Exception e) {
-                Log.e("AddMedication", "Save error", e);
-                runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    showError("Error: " + e.getMessage());
-                });
+        Log.d(TAG, "Adding medication for user: " + userEmail);
+
+        if (userEmail == null || userEmail.isEmpty()) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        long result;
+
+        if (isEditMode && medicationId != -1) {
+            // Update existing medication
+            medication.setId(medicationId);
+            result = dbHelper.updateMedication(medication, userEmail);
+
+            if (result > 0) {
+                Log.d(TAG, "Medication updated successfully");
+                Toast.makeText(this, "Medication updated successfully", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Log.e(TAG, "Failed to update medication");
+                Toast.makeText(this, "Failed to update medication", Toast.LENGTH_SHORT).show();
             }
-        }).start();
-    }
+        } else {
+            // Add new medication
+            result = dbHelper.addMedication(medication, userEmail);
 
-    private void showError(String message) {
-        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
+            if (result != -1) {
+                Log.d(TAG, "Medication added successfully with ID: " + result);
+                Toast.makeText(this, "Medication added successfully", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Log.e(TAG, "Failed to add medication");
+                Toast.makeText(this, "Failed to add medication", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

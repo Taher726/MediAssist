@@ -8,7 +8,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.example.mediassist.data.models.Appointment;
 import com.example.mediassist.data.models.Medication;
+import com.example.mediassist.data.models.NotificationModel;
+import com.example.mediassist.data.models.Prescription;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -43,6 +46,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_MEDICATION_IMAGE = "image";
     private static final String KEY_MEDICATION_IMAGE_PATH = "image_path";
     private static final String KEY_MEDICATION_USER_ID = "user_id";
+
+    // Add these constants to your DatabaseHelper class
+    private static final String TABLE_APPOINTMENTS = "appointments";
+
+    // Appointment Table Columns
+    private static final String KEY_APPOINTMENT_ID = "id";
+    private static final String KEY_APPOINTMENT_TITLE = "title";
+    private static final String KEY_APPOINTMENT_DESCRIPTION = "description";
+    private static final String KEY_APPOINTMENT_DATE = "date";
+    private static final String KEY_APPOINTMENT_PLACE = "place";
+    private static final String KEY_APPOINTMENT_STATUS = "status";
+    private static final String KEY_APPOINTMENT_USER_ID = "user_id";
+
+    // Add these constants to your DatabaseHelper class
+    private static final String TABLE_PRESCRIPTIONS = "prescriptions";
+
+    // Prescription Table Columns
+    private static final String KEY_PRESCRIPTION_ID = "id";
+    private static final String KEY_PRESCRIPTION_TITLE = "title";
+    private static final String KEY_PRESCRIPTION_DESC = "description";
+    private static final String KEY_PRESCRIPTION_FILE_PATH = "file_path";
+    private static final String KEY_PRESCRIPTION_FILE_TYPE = "file_type";
+    private static final String KEY_PRESCRIPTION_FILE_NAME = "file_name";
+    private static final String KEY_PRESCRIPTION_FILE_SIZE = "file_size";
+    private static final String KEY_PRESCRIPTION_DATE_ADDED = "date_added";
+    private static final String KEY_PRESCRIPTION_USER_ID = "user_id";
+
+    // Constants for notifications table
+    private static final String TABLE_NOTIFICATIONS = "notifications";
+    private static final String COLUMN_NOTIFICATION_ID = "notification_id";
+    private static final String COLUMN_NOTIFICATION_TITLE = "title";
+    private static final String COLUMN_NOTIFICATION_MESSAGE = "message";
+    private static final String COLUMN_NOTIFICATION_DATETIME = "datetime";
+    private static final String COLUMN_NOTIFICATION_TYPE = "type";
+    private static final String COLUMN_NOTIFICATION_RELATED_ID = "related_id";
+    private static final String COLUMN_NOTIFICATION_IS_READ = "is_read";
 
     private static DatabaseHelper instance;
 
@@ -84,10 +123,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 KEY_MEDICATION_USER_ID + " INTEGER," +
                 "FOREIGN KEY(" + KEY_MEDICATION_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_ID + ")" +
                 ")";
+        // Add this code to create the appointments table
+        String CREATE_APPOINTMENTS_TABLE = "CREATE TABLE " + TABLE_APPOINTMENTS +
+                "(" +
+                KEY_APPOINTMENT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                KEY_APPOINTMENT_TITLE + " TEXT," +
+                KEY_APPOINTMENT_DESCRIPTION + " TEXT," +
+                KEY_APPOINTMENT_DATE + " TEXT," +
+                KEY_APPOINTMENT_PLACE + " TEXT," +
+                KEY_APPOINTMENT_STATUS + " TEXT DEFAULT 'Upcoming'," +
+                KEY_APPOINTMENT_USER_ID + " INTEGER," +
+                "FOREIGN KEY(" + KEY_APPOINTMENT_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_ID + ")" +
+                ")";
+
+        // Add this code to create the prescriptions table
+        String CREATE_PRESCRIPTIONS_TABLE = "CREATE TABLE " + TABLE_PRESCRIPTIONS +
+                "(" +
+                KEY_PRESCRIPTION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                KEY_PRESCRIPTION_TITLE + " TEXT," +
+                KEY_PRESCRIPTION_DESC + " TEXT," +
+                KEY_PRESCRIPTION_FILE_PATH + " TEXT," +
+                KEY_PRESCRIPTION_FILE_TYPE + " TEXT," +
+                KEY_PRESCRIPTION_FILE_NAME + " TEXT," +
+                KEY_PRESCRIPTION_FILE_SIZE + " INTEGER," +
+                KEY_PRESCRIPTION_DATE_ADDED + " INTEGER," +
+                KEY_PRESCRIPTION_USER_ID + " INTEGER," +
+                "FOREIGN KEY(" + KEY_PRESCRIPTION_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + KEY_USER_ID + ")" +
+                ")";
+
+        // Create notifications table
+        String CREATE_NOTIFICATIONS_TABLE = "CREATE TABLE " + TABLE_NOTIFICATIONS + "("
+                + COLUMN_NOTIFICATION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COLUMN_NOTIFICATION_TITLE + " TEXT,"
+                + COLUMN_NOTIFICATION_MESSAGE + " TEXT,"
+                + COLUMN_NOTIFICATION_DATETIME + " TEXT,"
+                + COLUMN_NOTIFICATION_TYPE + " INTEGER,"
+                + COLUMN_NOTIFICATION_RELATED_ID + " INTEGER,"
+                + COLUMN_NOTIFICATION_IS_READ + " INTEGER DEFAULT 0"
+                + ")";
 
         try {
             db.execSQL(CREATE_USERS_TABLE);
             db.execSQL(CREATE_MEDICATIONS_TABLE);
+            db.execSQL(CREATE_APPOINTMENTS_TABLE);
+            // Execute the new prescriptions table creation
+            db.execSQL(CREATE_PRESCRIPTIONS_TABLE);
+            db.execSQL(CREATE_NOTIFICATIONS_TABLE);
             Log.d(TAG, "Tables created successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error creating database tables", e);
@@ -101,6 +182,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_MEDICATIONS);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_APPOINTMENTS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRESCRIPTIONS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFICATIONS);
             onCreate(db);
         } catch (Exception e) {
             Log.e(TAG, "Error upgrading database", e);
@@ -299,22 +383,53 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return medicationId;
     }
 
+    // Modified getMedicationsForUser method with improved logging
     public List<Medication> getMedicationsForUser(String userEmail) {
         List<Medication> medications = new ArrayList<>();
         SQLiteDatabase db = null;
         Cursor cursor = null;
 
         try {
+            Log.d(TAG, "Finding medications for email: " + userEmail);
+
             Long userId = getUserIdByEmail(userEmail);
             if (userId == null) {
+                Log.e(TAG, "User ID not found for email: " + userEmail);
                 return medications;
             }
 
+            Log.d(TAG, "Found user ID: " + userId);
+
             db = getReadableDatabase();
+
+            // First, get basic medication data without the image blob
+            String[] columns = {
+                    KEY_MEDICATION_ID,
+                    KEY_MEDICATION_NAME,
+                    KEY_MEDICATION_TYPE,
+                    KEY_MEDICATION_FREQUENCY,
+                    KEY_MEDICATION_DOSAGE,
+                    KEY_MEDICATION_TIME,
+                    KEY_MEDICATION_DAYS,
+                    KEY_MEDICATION_NOTES,
+                    KEY_MEDICATION_STATUS,
+                    KEY_MEDICATION_IMAGE_PATH
+            };
+
             String selection = KEY_MEDICATION_USER_ID + " = ?";
             String[] selectionArgs = {userId.toString()};
 
-            cursor = db.query(TABLE_MEDICATIONS, null, selection, selectionArgs, null, null, KEY_MEDICATION_NAME + " ASC");
+            cursor = db.query(
+                    TABLE_MEDICATIONS,    // table
+                    columns,              // columns (without the image data)
+                    selection,            // selection
+                    selectionArgs,        // selectionArgs
+                    null,                 // groupBy
+                    null,                 // having
+                    KEY_MEDICATION_NAME + " ASC"  // orderBy
+            );
+
+            Log.d(TAG, "Query executed, cursor has " + (cursor != null ? cursor.getCount() : 0) + " results");
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
@@ -328,14 +443,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     medication.setDays(cursor.getString(cursor.getColumnIndexOrThrow(KEY_MEDICATION_DAYS)));
                     medication.setNotes(cursor.getString(cursor.getColumnIndexOrThrow(KEY_MEDICATION_NOTES)));
                     medication.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(KEY_MEDICATION_STATUS)));
-
-                    int imageIndex = cursor.getColumnIndex(KEY_MEDICATION_IMAGE);
-                    if (!cursor.isNull(imageIndex)) {
-                        medication.setImageData(cursor.getBlob(imageIndex));
-                    }
-
                     medication.setImagePath(cursor.getString(cursor.getColumnIndexOrThrow(KEY_MEDICATION_IMAGE_PATH)));
 
+                    // Now get the image data separately if needed
+                    // We'll only do this for display if required
+                /*
+                Cursor imageCursor = null;
+                try {
+                    String[] imgColumns = {KEY_MEDICATION_IMAGE};
+                    String imgSelection = KEY_MEDICATION_ID + " = ?";
+                    String[] imgSelectionArgs = {String.valueOf(medication.getId())};
+
+                    imageCursor = db.query(
+                        TABLE_MEDICATIONS,
+                        imgColumns,
+                        imgSelection,
+                        imgSelectionArgs,
+                        null, null, null
+                    );
+
+                    if (imageCursor != null && imageCursor.moveToFirst()) {
+                        int imageIndex = imageCursor.getColumnIndex(KEY_MEDICATION_IMAGE);
+                        if (!imageCursor.isNull(imageIndex)) {
+                            medication.setImageData(imageCursor.getBlob(imageIndex));
+                        }
+                    }
+                } finally {
+                    if (imageCursor != null) {
+                        imageCursor.close();
+                    }
+                }
+                */
+
+                    Log.d(TAG, "Added medication: " + medication.getName());
                     medications.add(medication);
                 } while (cursor.moveToNext());
             }
@@ -345,6 +485,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             if (cursor != null) cursor.close();
             if (db != null) db.close();
         }
+
+        Log.d(TAG, "Returning " + medications.size() + " medications");
         return medications;
     }
 
@@ -365,10 +507,616 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return success;
     }
 
+    // Add this method to the DatabaseHelper class
+    public long updateMedication(Medication medication, String userEmail) {
+        long result = -1;
+        SQLiteDatabase db = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User not found with email: " + userEmail);
+                return -1;
+            }
+
+            db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(KEY_MEDICATION_NAME, medication.getName());
+            values.put(KEY_MEDICATION_TYPE, medication.getType());
+            values.put(KEY_MEDICATION_FREQUENCY, medication.getFrequency());
+            values.put(KEY_MEDICATION_DOSAGE, medication.getDosage());
+            values.put(KEY_MEDICATION_TIME, medication.getTime());
+            values.put(KEY_MEDICATION_DAYS, medication.getDays());
+            values.put(KEY_MEDICATION_NOTES, medication.getNotes());
+            values.put(KEY_MEDICATION_STATUS, medication.getStatus());
+
+            if (medication.getImageData() != null) {
+                values.put(KEY_MEDICATION_IMAGE, medication.getImageData());
+            }
+            values.put(KEY_MEDICATION_IMAGE_PATH, medication.getImagePath());
+
+            result = db.update(TABLE_MEDICATIONS, values,
+                    KEY_MEDICATION_ID + " = ? AND " + KEY_MEDICATION_USER_ID + " = ?",
+                    new String[]{String.valueOf(medication.getId()), String.valueOf(userId)});
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating medication", e);
+        } finally {
+            if (db != null) db.close();
+        }
+        return result;
+    }
+
     public static byte[] getBytesFromBitmap(Bitmap bitmap) {
         if (bitmap == null) return null;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
         return stream.toByteArray();
+    }
+
+    public byte[] getMedicationImage(int medicationId) {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        byte[] imageData = null;
+
+        try {
+            db = getReadableDatabase();
+            String[] columns = {KEY_MEDICATION_IMAGE};
+            String selection = KEY_MEDICATION_ID + " = ?";
+            String[] selectionArgs = {String.valueOf(medicationId)};
+
+            cursor = db.query(
+                    TABLE_MEDICATIONS,
+                    columns,
+                    selection,
+                    selectionArgs,
+                    null, null, null
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int imageIndex = cursor.getColumnIndex(KEY_MEDICATION_IMAGE);
+                if (!cursor.isNull(imageIndex)) {
+                    imageData = cursor.getBlob(imageIndex);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting medication image", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return imageData;
+    }
+
+    // Add appointment methods
+    public long addAppointment(Appointment appointment, String userEmail) {
+        long appointmentId = -1;
+        SQLiteDatabase db = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User not found with email: " + userEmail);
+                return -1;
+            }
+
+            db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(KEY_APPOINTMENT_TITLE, appointment.getTitle());
+            values.put(KEY_APPOINTMENT_DESCRIPTION, appointment.getDescription());
+            values.put(KEY_APPOINTMENT_DATE, appointment.getDate());
+            values.put(KEY_APPOINTMENT_PLACE, appointment.getPlace());
+            values.put(KEY_APPOINTMENT_STATUS, appointment.getStatus());
+            values.put(KEY_APPOINTMENT_USER_ID, userId);
+
+            appointmentId = db.insert(TABLE_APPOINTMENTS, null, values);
+            Log.d(TAG, "Added appointment with ID: " + appointmentId);
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding appointment", e);
+        } finally {
+            if (db != null) db.close();
+        }
+        return appointmentId;
+    }
+
+    public List<Appointment> getAppointmentsForUser(String userEmail) {
+        List<Appointment> appointments = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User ID not found for email: " + userEmail);
+                return appointments;
+            }
+
+            db = getReadableDatabase();
+            String selection = KEY_APPOINTMENT_USER_ID + " = ?";
+            String[] selectionArgs = {userId.toString()};
+            String orderBy = KEY_APPOINTMENT_DATE + " ASC";
+
+            cursor = db.query(
+                    TABLE_APPOINTMENTS,    // table
+                    null,                  // columns (null = all)
+                    selection,             // selection
+                    selectionArgs,         // selectionArgs
+                    null,                  // groupBy
+                    null,                  // having
+                    orderBy                // orderBy
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    Appointment appointment = new Appointment();
+                    appointment.setId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_ID)));
+                    appointment.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_TITLE)));
+                    appointment.setDescription(cursor.getString(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_DESCRIPTION)));
+                    appointment.setDate(cursor.getString(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_DATE)));
+                    appointment.setPlace(cursor.getString(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_PLACE)));
+                    appointment.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_STATUS)));
+                    appointment.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_APPOINTMENT_USER_ID)));
+
+                    appointments.add(appointment);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting appointments for user", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return appointments;
+    }
+
+    public boolean deleteAppointment(int appointmentId) {
+        boolean success = false;
+        SQLiteDatabase db = null;
+
+        try {
+            db = getWritableDatabase();
+            success = db.delete(TABLE_APPOINTMENTS, KEY_APPOINTMENT_ID + " = ?",
+                    new String[]{String.valueOf(appointmentId)}) > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting appointment", e);
+        } finally {
+            if (db != null) db.close();
+        }
+
+        return success;
+    }
+
+    public boolean updateAppointment(Appointment appointment, String userEmail) {
+        boolean success = false;
+        SQLiteDatabase db = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User not found with email: " + userEmail);
+                return false;
+            }
+
+            db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(KEY_APPOINTMENT_TITLE, appointment.getTitle());
+            values.put(KEY_APPOINTMENT_DESCRIPTION, appointment.getDescription());
+            values.put(KEY_APPOINTMENT_DATE, appointment.getDate());
+            values.put(KEY_APPOINTMENT_PLACE, appointment.getPlace());
+            values.put(KEY_APPOINTMENT_STATUS, appointment.getStatus());
+
+            success = db.update(TABLE_APPOINTMENTS, values,
+                    KEY_APPOINTMENT_ID + " = ? AND " + KEY_APPOINTMENT_USER_ID + " = ?",
+                    new String[]{String.valueOf(appointment.getId()), userId.toString()}) > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating appointment", e);
+        } finally {
+            if (db != null) db.close();
+        }
+
+        return success;
+    }
+
+    // Add prescription methods
+    public long addPrescription(Prescription prescription, String userEmail) {
+        long prescriptionId = -1;
+        SQLiteDatabase db = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User not found with email: " + userEmail);
+                return -1;
+            }
+
+            db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(KEY_PRESCRIPTION_TITLE, prescription.getTitle());
+            values.put(KEY_PRESCRIPTION_DESC, prescription.getDescription());
+            values.put(KEY_PRESCRIPTION_FILE_PATH, prescription.getFilePath());
+            values.put(KEY_PRESCRIPTION_FILE_TYPE, prescription.getFileType());
+            values.put(KEY_PRESCRIPTION_FILE_NAME, prescription.getFileName());
+            values.put(KEY_PRESCRIPTION_FILE_SIZE, prescription.getFileSize());
+            values.put(KEY_PRESCRIPTION_DATE_ADDED, prescription.getDateAdded());
+            values.put(KEY_PRESCRIPTION_USER_ID, userId);
+
+            prescriptionId = db.insert(TABLE_PRESCRIPTIONS, null, values);
+            Log.d(TAG, "Added prescription with ID: " + prescriptionId);
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding prescription", e);
+        } finally {
+            if (db != null) db.close();
+        }
+        return prescriptionId;
+    }
+
+    public List<Prescription> getPrescriptionsForUser(String userEmail) {
+        List<Prescription> prescriptions = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User ID not found for email: " + userEmail);
+                return prescriptions;
+            }
+
+            db = getReadableDatabase();
+            String selection = KEY_PRESCRIPTION_USER_ID + " = ?";
+            String[] selectionArgs = {userId.toString()};
+            String orderBy = KEY_PRESCRIPTION_DATE_ADDED + " DESC"; // Most recent first
+
+            cursor = db.query(
+                    TABLE_PRESCRIPTIONS,  // table
+                    null,                 // columns (null = all)
+                    selection,            // selection
+                    selectionArgs,        // selectionArgs
+                    null,                 // groupBy
+                    null,                 // having
+                    orderBy               // orderBy
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    Prescription prescription = new Prescription();
+                    prescription.setId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_ID)));
+                    prescription.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_TITLE)));
+                    prescription.setDescription(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DESC)));
+                    prescription.setFilePath(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_PATH)));
+                    prescription.setFileType(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_TYPE)));
+                    prescription.setFileName(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_NAME)));
+                    prescription.setFileSize(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_SIZE)));
+                    prescription.setDateAdded(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DATE_ADDED)));
+                    prescription.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_USER_ID)));
+
+                    prescriptions.add(prescription);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting prescriptions for user", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return prescriptions;
+    }
+
+    public List<Prescription> searchPrescriptions(String query, String userEmail) {
+        List<Prescription> prescriptions = new ArrayList<>();
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                Log.e(TAG, "User ID not found for email: " + userEmail);
+                return prescriptions;
+            }
+
+            db = getReadableDatabase();
+            String selection = KEY_PRESCRIPTION_USER_ID + " = ? AND (" +
+                    KEY_PRESCRIPTION_TITLE + " LIKE ? OR " +
+                    KEY_PRESCRIPTION_DESC + " LIKE ? OR " +
+                    KEY_PRESCRIPTION_FILE_NAME + " LIKE ?)";
+
+            String[] selectionArgs = {
+                    userId.toString(),
+                    "%" + query + "%",
+                    "%" + query + "%",
+                    "%" + query + "%"
+            };
+
+            String orderBy = KEY_PRESCRIPTION_DATE_ADDED + " DESC";
+
+            cursor = db.query(
+                    TABLE_PRESCRIPTIONS,
+                    null,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    orderBy
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    Prescription prescription = new Prescription();
+                    prescription.setId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_ID)));
+                    prescription.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_TITLE)));
+                    prescription.setDescription(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DESC)));
+                    prescription.setFilePath(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_PATH)));
+                    prescription.setFileType(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_TYPE)));
+                    prescription.setFileName(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_NAME)));
+                    prescription.setFileSize(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_SIZE)));
+                    prescription.setDateAdded(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DATE_ADDED)));
+                    prescription.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_USER_ID)));
+
+                    prescriptions.add(prescription);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error searching prescriptions", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return prescriptions;
+    }
+
+    public boolean deletePrescription(int prescriptionId) {
+        boolean success = false;
+        SQLiteDatabase db = null;
+
+        try {
+            db = getWritableDatabase();
+            success = db.delete(TABLE_PRESCRIPTIONS, KEY_PRESCRIPTION_ID + " = ?",
+                    new String[]{String.valueOf(prescriptionId)}) > 0;
+
+            Log.d(TAG, success ? "Prescription deleted successfully" : "Failed to delete prescription");
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting prescription", e);
+        } finally {
+            if (db != null) db.close();
+        }
+
+        return success;
+    }
+
+    public Prescription getPrescriptionById(int prescriptionId) {
+        Prescription prescription = null;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            db = getReadableDatabase();
+            String selection = KEY_PRESCRIPTION_ID + " = ?";
+            String[] selectionArgs = {String.valueOf(prescriptionId)};
+
+            cursor = db.query(
+                    TABLE_PRESCRIPTIONS,
+                    null,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                prescription = new Prescription();
+                prescription.setId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_ID)));
+                prescription.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_TITLE)));
+                prescription.setDescription(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DESC)));
+                prescription.setFilePath(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_PATH)));
+                prescription.setFileType(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_TYPE)));
+                prescription.setFileName(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_NAME)));
+                prescription.setFileSize(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_FILE_SIZE)));
+                prescription.setDateAdded(cursor.getLong(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_DATE_ADDED)));
+                prescription.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_PRESCRIPTION_USER_ID)));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting prescription by ID", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return prescription;
+    }
+
+    /**
+     * Count medications for a specific user
+     */
+    public int getMedicationCount(String userEmail) {
+        int count = 0;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                return 0;
+            }
+
+            db = getReadableDatabase();
+            String query = "SELECT COUNT(*) FROM " + TABLE_MEDICATIONS +
+                    " WHERE " + KEY_MEDICATION_USER_ID + " = ?";
+            cursor = db.rawQuery(query, new String[]{userId.toString()});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error counting medications", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return count;
+    }
+
+    /**
+     * Count appointments for a specific user
+     */
+    public int getAppointmentCount(String userEmail) {
+        int count = 0;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                return 0;
+            }
+
+            db = getReadableDatabase();
+            String query = "SELECT COUNT(*) FROM " + TABLE_APPOINTMENTS +
+                    " WHERE " + KEY_APPOINTMENT_USER_ID + " = ?";
+            cursor = db.rawQuery(query, new String[]{userId.toString()});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error counting appointments", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return count;
+    }
+
+    /**
+     * Count prescriptions for a specific user
+     */
+    public int getPrescriptionCount(String userEmail) {
+        int count = 0;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            Long userId = getUserIdByEmail(userEmail);
+            if (userId == null) {
+                return 0;
+            }
+
+            db = getReadableDatabase();
+            String query = "SELECT COUNT(*) FROM " + TABLE_PRESCRIPTIONS +
+                    " WHERE " + KEY_PRESCRIPTION_USER_ID + " = ?";
+            cursor = db.rawQuery(query, new String[]{userId.toString()});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error counting prescriptions", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
+        }
+
+        return count;
+    }
+
+    // Method to add a new notification
+    public long addNotification(NotificationModel notification) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(COLUMN_NOTIFICATION_TITLE, notification.getTitle());
+        values.put(COLUMN_NOTIFICATION_MESSAGE, notification.getMessage());
+        values.put(COLUMN_NOTIFICATION_DATETIME, notification.getDateTime());
+        values.put(COLUMN_NOTIFICATION_TYPE, notification.getType());
+        values.put(COLUMN_NOTIFICATION_RELATED_ID, notification.getRelatedId());
+        values.put(COLUMN_NOTIFICATION_IS_READ, notification.isRead() ? 1 : 0);
+
+        long id = db.insert(TABLE_NOTIFICATIONS, null, values);
+        db.close();
+        return id;
+    }
+
+    // Method to get all notifications
+    public List<NotificationModel> getAllNotifications() {
+        List<NotificationModel> notificationsList = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM " + TABLE_NOTIFICATIONS + " ORDER BY " +
+                COLUMN_NOTIFICATION_DATETIME + " DESC";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                NotificationModel notification = new NotificationModel();
+                notification.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_ID)));
+                notification.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_TITLE)));
+                notification.setMessage(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_MESSAGE)));
+                notification.setDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_DATETIME)));
+                notification.setType(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_TYPE)));
+                notification.setRelatedId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_RELATED_ID)));
+                notification.setRead(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_NOTIFICATION_IS_READ)) == 1);
+
+                notificationsList.add(notification);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+        return notificationsList;
+    }
+
+    // Method to mark notification as read
+    public int markNotificationAsRead(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NOTIFICATION_IS_READ, 1);
+
+        return db.update(TABLE_NOTIFICATIONS, values, COLUMN_NOTIFICATION_ID + " = ?",
+                new String[]{String.valueOf(id)});
+    }
+
+    // Method to delete a notification
+    public void deleteNotification(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_NOTIFICATIONS, COLUMN_NOTIFICATION_ID + " = ?",
+                new String[]{String.valueOf(id)});
+        db.close();
+    }
+
+    // Method to get unread notification count
+    // Method to get unread notification count
+    public int getUnreadNotificationsCount() {
+        int count = 0;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+
+        try {
+            db = this.getReadableDatabase();
+            String countQuery = "SELECT COUNT(*) FROM notifications WHERE is_read = 0";
+            cursor = db.rawQuery(countQuery, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // If the table doesn't exist yet, return 0
+            return 0;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+        }
+
+        return count;
     }
 }

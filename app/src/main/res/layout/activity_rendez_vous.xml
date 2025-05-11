@@ -37,78 +37,11 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
+            android:id="@+id/appointmentsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <!-- Section Title -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Prochains rendez-vous"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Example Appointment Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:layout_marginTop="4dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="#E6F7FF">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Consultation avec Dr. Ali"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Lundi 6 mai, 14:00"
-                        android:textSize="16sp"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@android:color/darker_gray" />
-
-                    <!-- Location with icon -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center_vertical">
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/icon_localisation"
-                            android:layout_marginEnd="6dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Clinique centrale - Tunis"
-                            android:textStyle="italic"
-                            android:textSize="16sp"
-                            android:textColor="@android:color/darker_gray" />
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Add more cards here if needed -->
+            <!-- Appointments will be added here programmatically -->
         </LinearLayout>
     </ScrollView>
 
